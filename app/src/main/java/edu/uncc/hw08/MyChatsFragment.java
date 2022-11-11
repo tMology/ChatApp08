@@ -6,11 +6,19 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import org.checkerframework.checker.units.qual.A;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+
+import edu.uncc.hw08.databinding.ChatListItemBinding;
 import edu.uncc.hw08.databinding.FragmentMyChatsBinding;
 
 /**
@@ -86,12 +94,74 @@ public class MyChatsFragment extends Fragment {
                 mListener.goToCreateChat();
             }
         });
+        //There are 2 problems with this code first, I do not know why my binding cannot call recyclerView here and 2 (line 147)
+         binding.recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+         chatAdapter = new ChatAdapter();
+
+
+
+
+        getActivity().setTitle("My Chats");
+    }
+
+    ArrayList<Chat> mChat = new ArrayList<>();
+    ChatAdapter chatAdapter;
+
+    class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder>{
+
+
+        @NonNull
+        @Override
+        public ChatViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            ChatListItemBinding binding = ChatListItemBinding.inflate(getLayoutInflater(), parent, false);
+            return new ChatViewHolder(binding);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull ChatViewHolder holder, int position) {
+            Chat chat = mChat.get(position);
+            holder.setupUI(chat);
+        }
+
+        @Override
+        public int getItemCount() {
+            return mChat.size();
+        }
+
+        class ChatViewHolder extends RecyclerView.ViewHolder{
+            ChatListItemBinding mBinding;
+            Chat mChat;
+
+            public ChatViewHolder( ChatListItemBinding binding){
+                super(binding.getRoot());
+                mBinding = binding;
+            }
+
+            public void setupUI(Chat chat){
+                mChat = chat;
+
+                mBinding.textViewMsgText.setText(mChat.getMessage());
+
+                SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy hh:mm a");
+
+                //After get createdAt i need to add .toDate, however I am not able to add this.
+                mBinding.textViewMsgOn.setText(sdf.format(mChat.getCreatedAt()));
+
+            }
+
+        }
 
     }
 
 
-    MyChatsListener mListener;
 
+
+
+
+
+
+
+    MyChatsListener mListener;
     public void onAttach(@NonNull Context context){
         super.onAttach(context);
         mListener = (MyChatsListener) context;
@@ -101,5 +171,4 @@ public class MyChatsFragment extends Fragment {
         void logout();
         void goToCreateChat();
     }
-
 }

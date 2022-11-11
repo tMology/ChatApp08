@@ -12,7 +12,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.HashMap;
@@ -91,20 +94,31 @@ public class CreateChatFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 //Create list views here
-                String comment = binding.editTextMessage.getText().toString();
-                if(comment.isEmpty()){
+                String message = binding.editTextMessage.getText().toString();
+                if(message.isEmpty()){
                     Toast.makeText(getActivity(),"Please enter a comment.", Toast.LENGTH_SHORT).show();
                 }else {
+                    HashMap<String, Object> data = new HashMap<>();
+
+                    data.put("messages", message);
+                    data.put("createdAt", FieldValue.serverTimestamp());
+
+
 
                     FirebaseFirestore db = FirebaseFirestore.getInstance();
-                    DocumentReference docRef = db.collection("Users").document();
+                    DocumentReference docRef = db.collection("chats").document();
+                    data.put("chatId", docRef.getId());
 
-                    HashMap<String, Object> postData = new HashMap<>();
-
-                    //postData.put("userId")
-
-
-                    mListener.goBackToMyChats();
+                    docRef.set(data).addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if(task.isSuccessful()){
+                                mListener.goBackToMyChats();
+                            }else{
+                                Toast.makeText(getActivity(), "Error creating forum!", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    });
                 }
             }
         });
