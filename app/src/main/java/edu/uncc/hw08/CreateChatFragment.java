@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -78,6 +79,8 @@ public class CreateChatFragment extends Fragment {
         return binding.getRoot();
     }
 
+    FirebaseAuth mAuth = FirebaseAuth.getInstance();
+
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -105,9 +108,21 @@ public class CreateChatFragment extends Fragment {
 
 
 
+
                     FirebaseFirestore db = FirebaseFirestore.getInstance();
                     DocumentReference docRef = db.collection("chats").document();
                     data.put("chatId", docRef.getId());
+
+                    HashMap<String, Object> dataMes = new HashMap<>();
+
+                    dataMes.put("ownerName", mAuth.getCurrentUser().getDisplayName());
+                    data.put("ownerId", mAuth.getCurrentUser().getUid());
+                    data.put("createdAt", FieldValue.serverTimestamp());
+
+
+                    DocumentReference docRef2 = db.collection("messages").document();
+                    data.put("messageId", docRef.getId());
+
 
                     docRef.set(data).addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override

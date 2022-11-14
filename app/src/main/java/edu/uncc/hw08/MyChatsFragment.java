@@ -13,6 +13,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.google.firebase.auth.FirebaseAuth;
+
 import org.checkerframework.checker.units.qual.A;
 
 import java.text.SimpleDateFormat;
@@ -77,6 +79,7 @@ public class MyChatsFragment extends Fragment {
         binding = FragmentMyChatsBinding.inflate(inflater, container, false);
         return binding.getRoot();    }
 
+
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -95,7 +98,7 @@ public class MyChatsFragment extends Fragment {
             }
         });
         //There are 2 problems with this code first, I do not know why my binding cannot call recyclerView here and 2 (line 147)
-         binding.recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        //binding.recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
          chatAdapter = new ChatAdapter();
 
 
