@@ -6,16 +6,11 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
-import com.google.firebase.auth.FirebaseAuth;
-
-import org.checkerframework.checker.units.qual.A;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -94,12 +89,13 @@ public class MyChatsFragment extends Fragment {
         binding.buttonNewChat.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mListener.goToCreateChat();
+                mListener.goToCreateNewChat();
             }
         });
         //There are 2 problems with this code first, I do not know why my binding cannot call recyclerView here and 2 (line 147)
         //binding.recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
          chatAdapter = new ChatAdapter();
+
 
 
 
@@ -172,6 +168,6 @@ public class MyChatsFragment extends Fragment {
 
     interface MyChatsListener{
         void logout();
-        void goToCreateChat();
+        void goToCreateNewChat();
     }
 }

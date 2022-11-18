@@ -1,5 +1,7 @@
 package edu.uncc.hw08;
 
+import static android.content.ContentValues.TAG;
+
 import android.content.Context;
 import android.os.Bundle;
 
@@ -7,9 +9,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -18,59 +23,34 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import edu.uncc.hw08.databinding.FragmentCreateChatBinding;
+import edu.uncc.hw08.databinding.UsersRowItemBinding;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link CreateChatFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class CreateChatFragment extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
 
     public CreateChatFragment() {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment CreateChatFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static CreateChatFragment newInstance(String param1, String param2) {
-        CreateChatFragment fragment = new CreateChatFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
+    @Override
+    public void onCreate(Bundle savedInstanceState){
+        super.onCreate(savedInstanceState);
     }
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
-    }
 
     FragmentCreateChatBinding binding;
+    FirebaseAuth mAuth = FirebaseAuth.getInstance();
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -79,11 +59,24 @@ public class CreateChatFragment extends Fragment {
         return binding.getRoot();
     }
 
-    FirebaseAuth mAuth = FirebaseAuth.getInstance();
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        usersAdapter = new UsersAdapter(getContext(), R.layout.users_row_item, new ArrayList<User>());
+        binding.listView.setAdapter(usersAdapter);
+
+        binding.listView.setOnClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id){
+                User user = usersAdapter.getItem(position);
+
+            }
+        });
+
+        //Getting strange issues here. https://www.youtube.com/watch?v=zk2F4QG77zs go to 19:47 in this youtube link thats where I left off
+
 
 
         binding.buttonCancel.setOnClickListener(new View.OnClickListener() {
@@ -100,47 +93,63 @@ public class CreateChatFragment extends Fragment {
                 String message = binding.editTextMessage.getText().toString();
                 if(message.isEmpty()){
                     Toast.makeText(getActivity(),"Please enter a comment.", Toast.LENGTH_SHORT).show();
-                }else {
-                    HashMap<String, Object> data = new HashMap<>();
-
-                    data.put("messages", message);
-                    data.put("createdAt", FieldValue.serverTimestamp());
+                }
+            }
+        });
 
 
+        FirebaseFirestore.getInstance().collection("users")
+                .orderBy("name", Query.Direction.ASCENDING)
+                .get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if(task.isSuccessful()){
+                    for (QueryDocumentSnapshot doc : task.getResult()){
+                        User user = doc.toObject(User.class);
 
-
-                    FirebaseFirestore db = FirebaseFirestore.getInstance();
-                    DocumentReference docRef = db.collection("chats").document();
-                    data.put("chatId", docRef.getId());
-
-                    HashMap<String, Object> dataMes = new HashMap<>();
-
-                    dataMes.put("ownerName", mAuth.getCurrentUser().getDisplayName());
-                    data.put("ownerId", mAuth.getCurrentUser().getUid());
-                    data.put("createdAt", FieldValue.serverTimestamp());
-
-
-                    DocumentReference docRef2 = db.collection("messages").document();
-                    data.put("messageId", docRef.getId());
-
-
-                    docRef.set(data).addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            if(task.isSuccessful()){
-                                mListener.goBackToMyChats();
-                            }else{
-                                Toast.makeText(getActivity(), "Error creating forum!", Toast.LENGTH_SHORT).show();
-                            }
+                        if(mAuth.getCurrentUser().getUid().equals(user.getUid())){
+                            users.add(user);
                         }
-                    });
+                        usersAdapter.notifyDataSetChanged();
+
+                    }
                 }
             }
         });
 
     }
 
+    ArrayList<User> users = new ArrayList<>();
+    UsersAdapter usersAdapter;
+
+    class UsersAdapter extends ArrayAdapter<User> {
+
+        public UsersAdapter(@NonNull Context context, int resource, @NonNull List<User> objects) {
+            super(context, resource, objects);
+        }
+
+
+        @NonNull
+        @Override
+        public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+            UsersRowItemBinding mBinding;
+
+            if (convertView == null) {
+                mBinding = UsersRowItemBinding.inflate(getLayoutInflater(), parent, false);
+                convertView = mBinding.getRoot();
+                convertView.setTag(mBinding);
+            } else {
+                mBinding = (UsersRowItemBinding) convertView.getTag();
+            }
+
+            User user = getItem(position);
+
+            return convertView;
+        }
+    }
+
     CreateChatListener mListener;
+
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);

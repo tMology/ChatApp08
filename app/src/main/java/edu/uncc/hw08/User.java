@@ -2,26 +2,39 @@ package edu.uncc.hw08;
 
 public class User {
 
-    public String id, displayName;
+    public String uid, name;
+    public boolean isOnline;
+
+
 
     public User(String id, String displayName){
-        this.id = id;
-        this.displayName = displayName;
+        this.uid = id;
+        this.name = displayName;
     }
 
-    public String getId() {
-        return id;
+    public String getUid() {
+        return uid;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setUid(String uid) {
+        this.uid = uid;
     }
 
-    public String getDisplayName() {
-        return displayName;
+    public String getName() {
+        return name;
     }
 
-    public void setDisplayName(String displayName) {
-        this.displayName = displayName;
+    public void setName(String name) {
+        this.name = name;
     }
+
+    public boolean isOnline(){
+        return isOnline();
+
+    }
+    public void setOnline(boolean online) {
+        isOnline = online;
+    }
+
+
 }
