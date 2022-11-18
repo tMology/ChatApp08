@@ -13,6 +13,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Toast;
@@ -67,11 +68,10 @@ public class CreateChatFragment extends Fragment {
         usersAdapter = new UsersAdapter(getContext(), R.layout.users_row_item, new ArrayList<User>());
         binding.listView.setAdapter(usersAdapter);
 
-        binding.listView.setOnClickListener(new AdapterView.OnItemClickListener() {
+        binding.listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id){
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 User user = usersAdapter.getItem(position);
-
             }
         });
 
