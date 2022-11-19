@@ -1,23 +1,31 @@
 package edu.uncc.hw08;
 
+import java.io.Serializable;
 import java.sql.Time;
 import java.sql.Timestamp;
 
-public class Message {
-    public String ownerName, ownerId, msgText;
-    Timestamp createdAt;
+public class Message implements Serializable {
+    public String msgId, msgTxt, ownerId, ownerName;
+    public Timestamp createdAt;
 
 
-    public Message(){
-
+    public Message() {
     }
 
-    public String getOwnerName() {
-        return ownerName;
+    public String getMsgId() {
+        return msgId;
     }
 
-    public void setOwnerName(String ownerName) {
-        this.ownerName = ownerName;
+    public void setMsgId(String msgId) {
+        this.msgId = msgId;
+    }
+
+    public String getMsgTxt() {
+        return msgTxt;
+    }
+
+    public void setMsgTxt(String msgTxt) {
+        this.msgTxt = msgTxt;
     }
 
     public String getOwnerId() {
@@ -28,12 +36,12 @@ public class Message {
         this.ownerId = ownerId;
     }
 
-    public String getMsgText() {
-        return msgText;
+    public String getOwnerName() {
+        return ownerName;
     }
 
-    public void setMsgText(String msgText) {
-        this.msgText = msgText;
+    public void setOwnerName(String ownerName) {
+        this.ownerName = ownerName;
     }
 
     public Timestamp getCreatedAt() {

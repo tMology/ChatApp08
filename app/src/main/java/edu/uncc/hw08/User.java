@@ -5,12 +5,14 @@ public class User {
     public String uid, name;
     public boolean isOnline;
 
+    public User(){
 
-
-    public User(String id, String displayName){
-        this.uid = id;
-        this.name = displayName;
     }
+
+//    public User(String id, String displayName){
+//        this.uid = id;
+//        this.name = displayName;
+//    }
 
     public String getUid() {
         return uid;

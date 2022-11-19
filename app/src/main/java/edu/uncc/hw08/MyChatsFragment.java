@@ -6,66 +6,39 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.RecyclerView;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.EventListener;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
-import edu.uncc.hw08.databinding.ChatListItemBinding;
 import edu.uncc.hw08.databinding.FragmentMyChatsBinding;
+import edu.uncc.hw08.databinding.MyChatsListItemBinding;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link MyChatsFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class MyChatsFragment extends Fragment {
-
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
 
     public MyChatsFragment() {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment MyChatsFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static MyChatsFragment newInstance(String param1, String param2) {
-        MyChatsFragment fragment = new MyChatsFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
     }
 
     FragmentMyChatsBinding binding;
+    FirebaseAuth mAuth = FirebaseAuth.getInstance();
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -91,63 +64,85 @@ public class MyChatsFragment extends Fragment {
             public void onClick(View v) {
                 mListener.goToCreateNewChat();
             }
+
+//            chatsAdapter = new ChatsAdapter(getContext(), R.layout.my_chats_list_item, mChats);
+//            binding.listView.setAdapter(chatsAdapter);
+//            binding.listView.setOnItemClickListener(new View.OnClickListener(){
+//               @Override
+//                public void onItemClickListener(AdapterView<?> parent, View view, int position, long id){
+//                   mListener.goToChat(mChats.get(position));
+//                } Encountering major issues with this portion of the code Youtube 1:01:21
+//            });
+
+
         });
         //There are 2 problems with this code first, I do not know why my binding cannot call recyclerView here and 2 (line 147)
         //binding.recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-         chatAdapter = new ChatAdapter();
+
+         getActivity().setTitle("My Chats");
+
+        FirebaseFirestore.getInstance().collection("chats").whereArrayContains("userIds", mAuth.getCurrentUser().getUid())
+                .addSnapshotListener(new EventListener<QuerySnapshot>() {
+                    @Override
+                    public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
+                        mChats.clear();
+                        for (QueryDocumentSnapshot doc: value){
+                            Chat chat = doc.toObject(Chat.class);
+                            mChats.add(chat);
+                        }
+                        //chatsAdapter.notifyDataSetChanged(); From this line my application is crashing from null, and I have no clue why..... Youtube 56:42
+                    }
+                });
 
 
-
-
-
-        getActivity().setTitle("My Chats");
     }
 
-    ArrayList<Chat> mChat = new ArrayList<>();
-    ChatAdapter chatAdapter;
+    MyChatsListener mListener;
+    ArrayList<Chat> mChats = new ArrayList<>();
+    ChatsAdapter chatsAdapter;
 
-    class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder>{
-
+    class ChatsAdapter extends ArrayAdapter<Chat> {
+    public ChatsAdapter(@NonNull Context context, int resource, @NonNull ArrayList<Chat> objects) {
+        super(context, resource, objects);
+    }
 
         @NonNull
         @Override
-        public ChatViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            ChatListItemBinding binding = ChatListItemBinding.inflate(getLayoutInflater(), parent, false);
-            return new ChatViewHolder(binding);
-        }
+        public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+            MyChatsListItemBinding mBinding;
+            if(convertView == null){
+                mBinding = MyChatsListItemBinding.inflate(getLayoutInflater(), parent, false);
+                convertView = mBinding.getRoot();
+                convertView.setTag(mBinding);
+            }else{
+                mBinding = (MyChatsListItemBinding) convertView.getTag();
+            }
+            Chat chat = getItem(position);
 
-        @Override
-        public void onBindViewHolder(@NonNull ChatViewHolder holder, int position) {
-            Chat chat = mChat.get(position);
-            holder.setupUI(chat);
-        }
+            mBinding.textViewMsgBy.setText("test");
 
-        @Override
-        public int getItemCount() {
-            return mChat.size();
-        }
+            if(chat.getUserIds() != null && chat.getUserIds().size() == 2 && chat.getUserNames() != null && chat.getUserNames().size() == 2){
+                if(chat.getUserIds().get(0).equals(mAuth.getCurrentUser().getUid())){
+                    mBinding.textViewMsgBy.setText(chat.getUserNames().get(1));
+                }else{
+                    mBinding.textViewMsgBy.setText(chat.getUserNames().get(0));
+                }
 
-        class ChatViewHolder extends RecyclerView.ViewHolder{
-            ChatListItemBinding mBinding;
-            Chat mChat;
-
-            public ChatViewHolder( ChatListItemBinding binding){
-                super(binding.getRoot());
-                mBinding = binding;
+            } else {
+                mBinding.textViewMsgBy.setText("N/A");
             }
 
-            public void setupUI(Chat chat){
-                mChat = chat;
 
-                mBinding.textViewMsgText.setText(mChat.getMessage());
-
+            if(chat.getLastMsg().getCreatedAt() != null){
                 SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy hh:mm a");
-
-                //After get createdAt i need to add .toDate, however I am not able to add this.
-                mBinding.textViewMsgOn.setText(sdf.format(mChat.getCreatedAt()));
-
+                mBinding.textViewMsgOn.setText(sdf.format(chat.getLastMsg().getCreatedAt())); //Still cant add .toDate() !!!!!!!! Youtube 54:03
+            } else{
+                mBinding.textViewMsgOn.setText("N/A");
             }
 
+            mBinding.textViewMsgText.setText(chat.getLastMsg().getMsgTxt());
+
+            return convertView;
         }
 
     }
@@ -160,7 +155,7 @@ public class MyChatsFragment extends Fragment {
 
 
 
-    MyChatsListener mListener;
+
     public void onAttach(@NonNull Context context){
         super.onAttach(context);
         mListener = (MyChatsListener) context;
@@ -169,5 +164,6 @@ public class MyChatsFragment extends Fragment {
     interface MyChatsListener{
         void logout();
         void goToCreateNewChat();
+        void goToChat(Chat chat);
     }
 }

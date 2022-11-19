@@ -18,6 +18,9 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.HashMap;
 
 import edu.uncc.hw08.databinding.FragmentSignUpBinding;
 
@@ -82,7 +85,22 @@ public class SignUpFragment extends Fragment {
                                     @Override
                                     public void onComplete(@NonNull Task<Void> task) {
                                         if (task.isSuccessful()) {
-                                            mListener.gotoMyChat();
+
+                                            FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+                                            HashMap<String, Object> data = new HashMap<>();
+                                            data.put("name", name);
+                                            data.put("uid", mAuth.getCurrentUser().getUid());
+                                            data.put("isOnline", true);
+
+                                            db.collection("users").document(mAuth.getCurrentUser().getUid()).set(data)
+                                                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                        @Override
+                                                        public void onComplete(@NonNull Task<Void> task) {
+                                                            mListener.gotoMyChat();
+                                                        }
+                                                    });
+
                                         } else {
                                             Toast.makeText(getContext(), "Error in creating user", Toast.LENGTH_SHORT).show();
                                         }
