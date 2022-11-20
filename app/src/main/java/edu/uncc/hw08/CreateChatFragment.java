@@ -27,6 +27,7 @@ import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
@@ -63,6 +64,7 @@ public class CreateChatFragment extends Fragment {
         return binding.getRoot();
     }
 
+    ListenerRegistration userRegistration;
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
@@ -127,7 +129,7 @@ public class CreateChatFragment extends Fragment {
                     DocumentReference msgDocRef = FirebaseFirestore.getInstance().collection("chats")
                             .document(chatDocRef.getId()).collection("messages").document();
                     messageData.put("msgId", msgDocRef.getId());
-                    chatData.put("lastMessage", messageData);
+                    chatData.put("lastMsg", messageData);
 
                     chatDocRef.set(chatData).addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
@@ -158,8 +160,9 @@ public class CreateChatFragment extends Fragment {
                 }
             }
         });
+
         //POINT OF VIDEO MENTIONS THAT HE CHANGES DATA FOR USER BEING ONLINE OR OFFLINE. YOUTUBE 27:00
-        FirebaseFirestore.getInstance().collection("users")
+        userRegistration = FirebaseFirestore.getInstance().collection("users")
                 .orderBy("name", Query.Direction.ASCENDING).addSnapshotListener(new EventListener<QuerySnapshot>() {
                     @Override
                     public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
@@ -173,9 +176,17 @@ public class CreateChatFragment extends Fragment {
                         usersAdapter.notifyDataSetChanged();
                     }
                 });
+        getActivity().setTitle("Create Chat");
 
 
+    }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+        if(userRegistration != null){
+            userRegistration.remove();
+        }
     }
 
     ArrayList<User> mUsers = new ArrayList<>();

@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,6 +18,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
@@ -47,6 +49,8 @@ public class MyChatsFragment extends Fragment {
         binding = FragmentMyChatsBinding.inflate(inflater, container, false);
         return binding.getRoot();    }
 
+
+    ListenerRegistration chatsRegistration;
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
@@ -81,20 +85,29 @@ public class MyChatsFragment extends Fragment {
 
          getActivity().setTitle("My Chats");
 
-        FirebaseFirestore.getInstance().collection("chats").whereArrayContains("userIds", mAuth.getCurrentUser().getUid())
+        chatsRegistration = FirebaseFirestore.getInstance().collection("chats").whereArrayContains("userIds", mAuth.getCurrentUser().getUid())
                 .addSnapshotListener(new EventListener<QuerySnapshot>() {
                     @Override
                     public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
+                        Log.d("demo", "onEvent : addSnapShotListener inside MyChatsFragment");
                         mChats.clear();
                         for (QueryDocumentSnapshot doc: value){
-                            Chat chat = doc.toObject(Chat.class);
-                            mChats.add(chat);
+                            //Chat chat = doc.toObject(Chat.class);
+                            //mChats.add(chat);
                         }
                         //chatsAdapter.notifyDataSetChanged(); From this line my application is crashing from null, and I have no clue why..... Youtube 56:42
                     }
                 });
 
 
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if(chatsRegistration !=null){
+            chatsRegistration.remove();
+        }
     }
 
     MyChatsListener mListener;
